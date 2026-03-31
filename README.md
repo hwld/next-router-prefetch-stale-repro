@@ -1,36 +1,79 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# next-router-prefetch-stale-repro
 
-## Getting Started
+Minimal `create-next-app` repro for a Next.js App Router issue in `15.1.12`.
 
-First, run the development server:
+This repro demonstrates a case where navigating back to a dynamic page reuses
+the previous render without sending a new RSC request.
+
+## Versions
+
+- `next@15.1.12`
+- `react@19.0.0`
+- `react-dom@19.0.0`
+- TypeScript
+- Tailwind CSS
+
+## How to run
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/hwld/next-router-prefetch-stale-repro.git
+cd next-router-prefetch-stale-repro
+pnpm install
+pnpm build
+pnpm start
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:3000/`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## What The App Does
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `/items` is `dynamic = "force-dynamic"`.
+- `/items` prints a per-render `render id` and `rendered at` timestamp.
+- `/items/import` has a normal `Link` back to `/items`, so Next.js auto
+  prefetch can run there.
 
-## Learn More
+## Repro
 
-To learn more about Next.js, take a look at the following resources:
+1. Open `/`.
+2. Click `Open /items with Link prefetch=false`.
+3. Confirm `/items` shows a `render id` and `rendered at` value.
+4. Click `Go to /items/import`.
+5. Click `Back to /items`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Expected
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Back to `/items` sends a new `/_rsc` request.
+- `/items` shows a different `render id`.
+- `/items` shows a different `rendered at`.
+- The server prints a new `[items] render ...` line.
 
-## Deploy on Vercel
+## Actual when the bug hits
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- No new `/_rsc` request is sent on the first click back.
+- `/items` renders immediately with the same `render id` and `rendered at` as
+  the first visit.
+- There is no new `[items] render ...` log.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Second cycle
+
+1. From `/items`, click `Go to /items/import` again.
+2. Click `Back to /items` again.
+
+On this second cycle, the navigation often does fetch and `/items` updates to a
+new `render id`.
+
+## Why The Repro Looks Like This
+
+- The first `/ -> /items` navigation uses `prefetch={false}` to keep the
+  starting cache state simple.
+- The suspected problem is the back navigation from `/items/import` to
+  `/items`, not the initial `prefetch={false}` itself.
+
+## Investigation
+
+See [INVESTIGATION.md](./INVESTIGATION.md) for:
+
+- version checks across `15.x` and `16.x`
+- `staleTimes` experiments
+- a local `pnpm patch` experiment that removes the `!isFirstRead` guard
+- the suspected `15.x` implementation path
