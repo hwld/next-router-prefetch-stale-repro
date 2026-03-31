@@ -1,0 +1,26 @@
+diff --git a/dist/client/components/router-reducer/reducers/navigate-reducer.js b/dist/client/components/router-reducer/reducers/navigate-reducer.js
+index 4a86bd18a016c02c9e5d205e5e7fec19dc691c2c..1939d379cf4f156d958c9ffe25ea818760338246 100644
+--- a/dist/client/components/router-reducer/reducers/navigate-reducer.js
++++ b/dist/client/components/router-reducer/reducers/navigate-reducer.js
+@@ -296,7 +296,7 @@ function navigateReducer(state, action) {
+                     // separate function.
+                     const cache = (0, _approuter.createEmptyCacheNode)();
+                     let applied = false;
+-                    if (prefetchValues.status === _routerreducertypes.PrefetchCacheEntryStatus.stale && !isFirstRead) {
++                    if (prefetchValues.status === _routerreducertypes.PrefetchCacheEntryStatus.stale) {
+                         // When we have a stale prefetch entry, we only want to re-use the loading state of the route we're navigating to, to support instant loading navigations
+                         // this will trigger a lazy fetch for the actual page data by nulling the `rsc` and `prefetchRsc` values for page data,
+                         // while copying over the `loading` for the segment that contains the page data.
+diff --git a/dist/esm/client/components/router-reducer/reducers/navigate-reducer.js b/dist/esm/client/components/router-reducer/reducers/navigate-reducer.js
+index d8295c68543852a941de9822756ce46a6a045a89..bd71194b6c55cc631d5151632bf00b410ccce36b 100644
+--- a/dist/esm/client/components/router-reducer/reducers/navigate-reducer.js
++++ b/dist/esm/client/components/router-reducer/reducers/navigate-reducer.js
+@@ -274,7 +274,7 @@ export function navigateReducer(state, action) {
+                     // separate function.
+                     const cache = createEmptyCacheNode();
+                     let applied = false;
+-                    if (prefetchValues.status === PrefetchCacheEntryStatus.stale && !isFirstRead) {
++                    if (prefetchValues.status === PrefetchCacheEntryStatus.stale) {
+                         // When we have a stale prefetch entry, we only want to re-use the loading state of the route we're navigating to, to support instant loading navigations
+                         // this will trigger a lazy fetch for the actual page data by nulling the `rsc` and `prefetchRsc` values for page data,
+                         // while copying over the `loading` for the segment that contains the page data.
